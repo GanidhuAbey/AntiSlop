@@ -5,6 +5,9 @@ import * as vscode from 'vscode';
 
 import { queryFeedback } from './providerQuery'
 
+import { initializeStatusBar } from './statusBar'
+
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -17,10 +20,13 @@ export function activate(context: vscode.ExtensionContext) {
 	// We can pass editor context as a parameter to the callback function (refer to textEditor)
 	const disposable = vscode.commands.registerTextEditorCommand('antislop.annotate', async (textEditor: vscode.TextEditor) => {
 		// The code you place here will be executed every time your command is executed
-		await queryFeedback(textEditor);
+		// await queryFeedback();
 	});
 
 	context.subscriptions.push(disposable);
+
+	// ------------------------------- STATUS BAR -------------------------------
+	initializeStatusBar(context);
 }
 
 // This method is called when your extension is deactivated
