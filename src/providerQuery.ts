@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import {
 	LanguageModelChatResponse,
     LanguageModelChatMessage,
+    LanguageModelChat,
     CancellationTokenSource,
 	TextEditor,
     Range,

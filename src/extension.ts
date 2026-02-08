@@ -1,9 +1,9 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { text } from 'stream/consumers';
 import * as vscode from 'vscode';
 
 import { queryFeedback } from './providerQuery'
+import { provideFileContext } from './providerMultiContext';
 
 import { initializeStatusBar } from './statusBar'
 
@@ -21,6 +21,8 @@ export function activate(context: vscode.ExtensionContext) {
 	const disposable = vscode.commands.registerTextEditorCommand('antislop.annotate', async (textEditor: vscode.TextEditor) => {
 		// The code you place here will be executed every time your command is executed
 		// await queryFeedback();
+		//let model = await provideFileContext(textEditor);
+		//await queryFeedback(model, textEditor);
 	});
 
 	context.subscriptions.push(disposable);
