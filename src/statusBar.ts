@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 
 import { queryFeedback, clearDecorations } from './providerQuery'
 import { provideFileContext } from './providerMultiContext';
+import { ContextPanel } from './contextPanel';
 
 const redStatusBarColour = `rgb(255, 114, 114)`;
 const YellowStatusBarColour = `rgb(249, 255, 85)`;
@@ -10,15 +11,23 @@ const greenStatusBarColour = `rgb(54, 255, 108)`;
 const redStatusBarCommand = 'antislop.redStatusBar';
 const yellowStatusBarCommand = 'antislop.yellowStatusBar';
 const greenStatusBarCommand = 'antislop.greenStatusBar';
+const contextStatusBarCommand = 'antislop.contextStatusBar';
+
+const redIcon = '🟥';  //'error';
+const yellowIcon = '🟨'; // 'warning';
+const greenIcon =  '🟩'; //'thumbsdown';
+const contextIcon = '📋'; // context requirements icon
+const loadingIcon = '⏳'; // loading indicator
 
 let redStatusBarItem: vscode.StatusBarItem;
 let yellowStatusBarItem: vscode.StatusBarItem;
 let greenStatusBarItem: vscode.StatusBarItem;
+let contextStatusBarItem: vscode.StatusBarItem;
 
 
 // Track which button is currently active
 export type ActiveButton = 'red' | 'yellow' | 'green' | 'onLoad' | null;
-let activeButton: ActiveButton = null;
+let activeButton: ActiveButton = null;5
 
 // Track context of relevant files for currently open file.
 export let fileListMessages = [''];
@@ -34,7 +43,7 @@ export function initializeStatusBar(context: vscode.ExtensionContext): void {
 
 	redStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 9999);
     redStatusBarItem.command = redStatusBarCommand; // Command to execute when clicked
-    redStatusBarItem.text = `$(error) 0`;
+    redStatusBarItem.text = `${redIcon} -`;
     redStatusBarItem.show();
 
 	context.subscriptions.push(redStatusBarItem);
@@ -46,7 +55,7 @@ export function initializeStatusBar(context: vscode.ExtensionContext): void {
 
 	yellowStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 9998);
     yellowStatusBarItem.command = yellowStatusBarCommand; // Command to execute when clicked
-    yellowStatusBarItem.text = `$(warning) 0`;
+    yellowStatusBarItem.text = `${yellowIcon} -`;
     yellowStatusBarItem.show();
 
 	context.subscriptions.push(yellowStatusBarItem);
@@ -58,13 +67,30 @@ export function initializeStatusBar(context: vscode.ExtensionContext): void {
 
 	greenStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 9997);
     greenStatusBarItem.command = greenStatusBarCommand; // Command to execute when clicked
-    greenStatusBarItem.text = `$(thumbsdown) 0`;
+    greenStatusBarItem.text = `${greenIcon} -`;
     greenStatusBarItem.show();
 
 	context.subscriptions.push(greenStatusBarItem);
 
+    // ------------------------ Context Status ------------------------
+	context.subscriptions.push(vscode.commands.registerCommand(contextStatusBarCommand, () => {
+        ContextPanel.createOrShow(context.extensionUri);
+	}));
+
+	contextStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 10000);
+    contextStatusBarItem.command = contextStatusBarCommand;
+    contextStatusBarItem.text = contextIcon;
+    contextStatusBarItem.tooltip = 'Set Project Requirements';
+    contextStatusBarItem.show();
+
+	context.subscriptions.push(contextStatusBarItem);
+
     // Run once to populate,
-    handleButtonClickOnLoad('onLoad', redStatusBarColour);
+    // handleButtonClickOnLoad('onLoad', redStatusBarColour);
+
+    // redStatusBarItem.text = `${redIcon} -`;
+    // yellowStatusBarItem.text = `${yellowIcon} -`;
+    // greenStatusBarItem.text = `${greenIcon} -`;
 
     // Register on file switch to trigger file context query.
     context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(async (editor) =>  {
@@ -89,18 +115,10 @@ function updateGreenStatusBar(): void {
     handleButtonClick('green', greenStatusBarColour);
 }
 
-async function handleButtonClickOnLoad(button: ActiveButton, color: string): Promise<void> {
-        if (button) {
-            fileListMessages = await provideFileContext();
-            const counts = await queryFeedback(fileListMessages, color, button);
-            updateAllStatusBars(counts.red, counts.yellow, counts.green);
-        }
-}
-
 // Handle button click logic for toggling and switching
 async function handleButtonClick(button: ActiveButton, color: string): Promise<void> {
 
-    if (button && activeButton === button) { // same button is clicked so turn off
+    if (activeButton === button) { // same button is clicked so turn off
         clearDecorations();
         activeButton = null;
 
@@ -111,16 +129,24 @@ async function handleButtonClick(button: ActiveButton, color: string): Promise<v
         }
         activeButton = button;
         if (button) {
-            fileListMessages = await provideFileContext();
-            const counts = await queryFeedback(fileListMessages, color, button);
-            updateAllStatusBars(counts.red, counts.yellow, counts.green);
+            // Show loading indicator
+            contextStatusBarItem.text = loadingIcon;
+            
+            try {
+                fileListMessages = await provideFileContext();
+                const counts = await queryFeedback(fileListMessages, color, button);
+                updateAllStatusBars(counts.red, counts.yellow, counts.green);
+            } finally {
+                // Restore context icon
+                contextStatusBarItem.text = contextIcon;
+            }
         }
 
     }
 }
 
 function updateAllStatusBars(redCount: number, yellowCount: number, greenCount: number): void {
-    redStatusBarItem.text = `$(error) ${redCount}`;
-    yellowStatusBarItem.text = `$(warning) ${yellowCount}`;
-    greenStatusBarItem.text = `$(thumbsdown) ${greenCount}`;
+    redStatusBarItem.text = `${redIcon} ${redCount}`;
+    yellowStatusBarItem.text = `${yellowIcon} ${yellowCount}`;
+    greenStatusBarItem.text = `${greenIcon} ${greenCount}`;
 }
