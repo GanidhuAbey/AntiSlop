@@ -21,7 +21,7 @@ export type ActiveButton = 'red' | 'yellow' | 'green' | 'onLoad' | null;
 let activeButton: ActiveButton = null;
 
 // Track context of relevant files for currently open file.
-let fileListMessages = [''];
+export let fileListMessages = [''];
 
 // Note: icons can be found at https://microsoft.github.io/vscode-codicons/dist/codicon.html
 
