@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 
 import { queryFeedback, clearDecorations } from './providerQuery'
+import { provideFileContext } from './providerMultiContext';
 
 const redStatusBarColour = `rgb(255, 114, 114)`;
 const YellowStatusBarColour = `rgb(249, 255, 85)`;
@@ -17,6 +18,9 @@ let greenStatusBarItem: vscode.StatusBarItem;
 // Track which button is currently active
 export type ActiveButton = 'red' | 'yellow' | 'green' | 'onLoad' | null;
 let activeButton: ActiveButton = null;
+
+// Track context of relevant files for currently open file.
+let fileListMessages = [''];
 
 // Note: icons can be found at https://microsoft.github.io/vscode-codicons/dist/codicon.html
 
@@ -60,6 +64,13 @@ export function initializeStatusBar(context: vscode.ExtensionContext): void {
 
     // Run once to populate,
     handleButtonClickOnLoad('onLoad', redStatusBarColour);
+
+    // Register on file switch to trigger file context query.
+    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(async (editor) =>  {
+        // if (editor) {
+        //     fileListMessages = await provideFileContext(editor);
+        // }
+    }))
 }
 
 // Run whenever red status icon clicked
@@ -78,9 +89,9 @@ function updateGreenStatusBar(): void {
 }
 
 async function handleButtonClickOnLoad(button: ActiveButton, color: string): Promise<void> {
-
         if (button) {
-            const counts = await queryFeedback(color, button);
+            fileListMessages = await provideFileContext();
+            const counts = await queryFeedback(fileListMessages, color, button);
             updateAllStatusBars(counts.red, counts.yellow, counts.green);
         }
 }
@@ -99,7 +110,8 @@ async function handleButtonClick(button: ActiveButton, color: string): Promise<v
         }
         activeButton = button;
         if (button) {
-            const counts = await queryFeedback(color, button);
+            fileListMessages = await provideFileContext();
+            const counts = await queryFeedback(fileListMessages, color, button);
             updateAllStatusBars(counts.red, counts.yellow, counts.green);
         }
 
