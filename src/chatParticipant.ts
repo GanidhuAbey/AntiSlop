@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
 
-import { getCodeInActiveFileWithLineNumbers } from './utils';
+import { splitTextContent } from './utils';
 import { fileListMessages } from './statusBar';
 import { activeFileMessages } from './providerQuery';
 
 import { getChatSystemPrompt } from './prompts';
+import { projectContext } from './projectContext';
 
 export interface AnnotationData {
     line: number;
@@ -48,6 +49,13 @@ export function createChatParticipant(context: vscode.ExtensionContext) {
                 vscode.LanguageModelChatMessage.User(systemPrompt + request.prompt)
                 //vscode.LanguageModelChatMessage.User(systemPrompt + request.prompt)
             ];
+
+            const projectContextPrompt = '{ "projectRequirements" : "' + projectContext + '"}';
+            const projectContextMessages = splitTextContent(projectContextPrompt);
+
+            projectContextMessages.forEach(item => {
+                messages.push(vscode.LanguageModelChatMessage.User(item));
+            })
             
             fileListMessages.forEach(item => {
                 messages.push(vscode.LanguageModelChatMessage.User(item));

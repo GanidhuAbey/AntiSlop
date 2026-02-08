@@ -40,6 +40,10 @@ export function getChatSystemPrompt(currentAnnotationContext: AnnotationData) {
     - Line ${currentAnnotationContext.line}
     - Severity: ${currentAnnotationContext.severity}
     - Original suggestion: "${currentAnnotationContext.suggestion}"
+
+    The student is working on a project outlined by the requirements given in a JSON object of the following structure:
+
+    {"projectRequirements" : "The requirements for the project the user is working on"}
     
     To help you better understand the users code base when assisting them, The user will send a JSON object of files relevant to the one they are working on with the contents of the file. The JSON object will be in the structure:
     
