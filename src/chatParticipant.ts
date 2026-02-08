@@ -1,5 +1,9 @@
 import * as vscode from 'vscode';
 
+import { getCodeInActiveFileWithLineNumbers } from './utils';
+import { fileListMessages } from './statusBar';
+import { activeFileMessages } from './providerQuery';
+
 interface AnnotationData {
     line: number;
     suggestion: string;
@@ -30,8 +34,13 @@ Context:
 - Severity: ${currentAnnotationContext.severity}
 - Original suggestion: "${currentAnnotationContext.suggestion}"
 
-The student is asking follow-up questions about this suggestion. Be helpful, patient, and educational in your responses.
+To help you better understand the users code base when assisting them, The user will send a JSON object of files relevant to the one they are working on with the contents of the file. The JSON object will be in the structure:
 
+{ fileName1 : [“content of fileName1 as string“], fileName2 : [ “content of fileName2 as string”] }
+
+Afterwards, the user will provide a file that was being evaluated with line numbers.
+
+The student is asking follow-up questions about this suggestion. Be helpful, patient, and educational in your responses.
 `;
         }
 
@@ -47,9 +56,22 @@ The student is asking follow-up questions about this suggestion. Be helpful, pat
             }
 
             const model = models[0];
-            const messages = [
+            let messages = [
                 vscode.LanguageModelChatMessage.User(systemPrompt + request.prompt)
+                //vscode.LanguageModelChatMessage.User(systemPrompt + request.prompt)
             ];
+            
+            fileListMessages.forEach(item => {
+                messages.push(vscode.LanguageModelChatMessage.User(item));
+            })
+
+            activeFileMessages.forEach(item=> {
+                messages.push(vscode.LanguageModelChatMessage.User(item));
+            })
+
+            messages.push(vscode.LanguageModelChatMessage.User(request.prompt));
+
+            console.log(messages);
 
             const chatResponse = await model.sendRequest(messages, {}, token);
 

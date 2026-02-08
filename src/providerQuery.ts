@@ -15,6 +15,7 @@ import {
 import type { ActiveButton } from './statusBar';
 import { getCodeInActiveFileWithLineNumbers, getVisibleCodeWithLineNumbers, parseChatResponse } from './utils';
 
+export let activeFileMessages = [''];
 
 // Store all decoration types so they can be cleared
 let activeDecorations: vscode.TextEditorDecorationType[] = [];
@@ -50,7 +51,7 @@ export async function queryFeedback(fileListMessages: string[], color: string, a
 	}
 
     // select model (TODO: should let user choose which agent they want.)
-    const code = getCodeInActiveFileWithLineNumbers(textEditor);	
+    activeFileMessages = getCodeInActiveFileWithLineNumbers(textEditor);	
     let [model] = await lm.selectChatModels({
     vendor: 'copilot',
     family: 'gpt-4o'
@@ -92,7 +93,7 @@ Afterwards, the user will provide a file they want to evaluate with line numbers
         messages.push(LanguageModelChatMessage.User(item))
     })
 
-    code.forEach(item => {
+    activeFileMessages.forEach(item => {
         messages.push(LanguageModelChatMessage.User(item));
     })
 
