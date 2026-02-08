@@ -19,6 +19,15 @@ import { getCodeInActiveFileWithLineNumbers, getVisibleCodeWithLineNumbers, pars
 // Store all decoration types so they can be cleared
 let activeDecorations: vscode.TextEditorDecorationType[] = [];
 
+// Store annotation data for each decorated line
+interface AnnotationData {
+	line: number;
+	suggestion: string;
+	severity: string;
+	color: string;
+}
+export let annotationMap: Map<number, AnnotationData> = new Map();
+
 // Clear all active decorations
 export function clearDecorations() {
 	const textEditor = vscode.window.activeTextEditor;
@@ -29,6 +38,7 @@ export function clearDecorations() {
 		});
 	}
 	activeDecorations = [];
+	annotationMap.clear();
 }
 // Query the LLM on the currently visible section of code
 export async function queryFeedback(fileListMessages: string[], color: string, activeSeverity: ActiveButton): Promise<{red: number, yellow: number, green: number}> {
@@ -121,14 +131,17 @@ function categorizeResponses(responses: any[], textEditor: TextEditor, color: st
         if (annotation.severity === 'onLoad' ){
             // do nothing
         } else if (annotation.severity === activeSeverity) {
-            applyDecoration(textEditor, annotation.line, annotation.suggestion, color);
+            applyDecoration(textEditor, annotation.line, annotation.suggestion, color, annotation.severity);
         }
     })
 
     return counts;
 }
 
-function applyDecoration(textEditor: TextEditor, line: number, suggestion: string, color: string) {
+function applyDecoration(textEditor: TextEditor, line: number, suggestion: string, color: string, severity: string) {
+	// Store annotation data for code actions
+	annotationMap.set(line, { line, suggestion, severity, color });
+	
 	const squigglyDecoration = window.createTextEditorDecorationType({
 		textDecoration: `underline wavy ${color}`
 	});

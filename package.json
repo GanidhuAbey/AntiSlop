@@ -9,13 +9,17 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
-    "commands": [
+    "chatParticipants": [
       {
-        "command": "antislop.annotate",
-        "title": "Toggle AntiSlop Annotations"
+        "id": "antislop.chatParticipant",
+        "name": "antislop",
+        "description": "Ask questions about AntiSlop code suggestions",
+        "isSticky": true
       }
     ]
   },
