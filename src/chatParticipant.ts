@@ -4,7 +4,9 @@ import { getCodeInActiveFileWithLineNumbers } from './utils';
 import { fileListMessages } from './statusBar';
 import { activeFileMessages } from './providerQuery';
 
-interface AnnotationData {
+import { getChatSystemPrompt } from './prompts';
+
+export interface AnnotationData {
     line: number;
     suggestion: string;
     severity: string;
@@ -27,21 +29,7 @@ export function createChatParticipant(context: vscode.ExtensionContext) {
         // If we have annotation context, prepend it to the conversation
         let systemPrompt = '';
         if (currentAnnotationContext) {
-            systemPrompt = `You are helping a student understand a code suggestion. 
-
-Context:
-- Line ${currentAnnotationContext.line}
-- Severity: ${currentAnnotationContext.severity}
-- Original suggestion: "${currentAnnotationContext.suggestion}"
-
-To help you better understand the users code base when assisting them, The user will send a JSON object of files relevant to the one they are working on with the contents of the file. The JSON object will be in the structure:
-
-{ fileName1 : [“content of fileName1 as string“], fileName2 : [ “content of fileName2 as string”] }
-
-Afterwards, the user will provide a file that was being evaluated with line numbers.
-
-The student is asking follow-up questions about this suggestion. Be helpful, patient, and educational in your responses.
-`;
+            systemPrompt = getChatSystemPrompt(currentAnnotationContext);
         }
 
         try {
@@ -71,7 +59,7 @@ The student is asking follow-up questions about this suggestion. Be helpful, pat
 
             messages.push(vscode.LanguageModelChatMessage.User(request.prompt));
 
-            console.log(messages);
+            //console.log(messages);
 
             const chatResponse = await model.sendRequest(messages, {}, token);
 
