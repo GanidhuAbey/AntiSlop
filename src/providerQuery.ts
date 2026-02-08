@@ -14,6 +14,8 @@ import {
 
 import type { ActiveButton } from './statusBar';
 import { getCodeInActiveFileWithLineNumbers, getVisibleCodeWithLineNumbers, parseChatResponse } from './utils';
+import { getProjectContext, hasProjectContext, projectContext } from './projectContext';
+
 
 export let activeFileMessages = [''];
 
@@ -44,6 +46,8 @@ export function clearDecorations() {
 // Query the LLM on the currently visible section of code
 export async function queryFeedback(fileListMessages: string[], color: string, activeSeverity: ActiveButton): Promise<{red: number, yellow: number, green: number}> {
 	const textEditor = vscode.window.activeTextEditor;
+
+	// console.log(`THIS IS THE CURRENT CONTEXT: ${projectContext}`);
 		
 	if (!textEditor) {
 		vscode.window.showWarningMessage('No active open file found');
@@ -61,7 +65,11 @@ export async function queryFeedback(fileListMessages: string[], color: string, a
     //console.log(model);
 
     // provide a pre-prompt for the LLM to guide it's responses
-    const ANNOTATION_PROMPT = `You are a code tutor who helps students learn how to write better code. Your job is to evaluate a block of code that the user gives you and then annotate any lines that could be improved with a brief suggestion and the reason why you are making that suggestion.
+    const projectContextInfo = hasProjectContext()  //TODO split getProjectContext into multiple if needed
+        ? `\n\nProject Requirements and Context:\n${getProjectContext()}\n\nPlease keep these project requirements in mind when evaluating the code.\n\n`
+        : '';
+
+    const ANNOTATION_PROMPT = `You are a code tutor who helps students learn how to write better code. Your job is to evaluate a block of code that the user gives you and then annotate any lines that could be improved with a brief suggestion and the reason why you are making that suggestion.${projectContextInfo}
   
    For each suggestion, assign a severity level:
    - "red": Critical issues that impact security, incorrect behavior, data loss, edge cases, hidden bugs, undefined behavior or race conditions. Only red if it is one of these options.
