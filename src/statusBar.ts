@@ -67,9 +67,9 @@ export function initializeStatusBar(context: vscode.ExtensionContext): void {
 
     // Register on file switch to trigger file context query.
     context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(async (editor) =>  {
-        if (editor) {
-            fileListMessages = await provideFileContext(editor);
-        }
+        // if (editor) {
+        //     fileListMessages = await provideFileContext(editor);
+        // }
     }))
 }
 
@@ -90,6 +90,7 @@ function updateGreenStatusBar(): void {
 
 async function handleButtonClickOnLoad(button: ActiveButton, color: string): Promise<void> {
         if (button) {
+            fileListMessages = await provideFileContext();
             const counts = await queryFeedback(fileListMessages, color, button);
             updateAllStatusBars(counts.red, counts.yellow, counts.green);
         }
@@ -109,6 +110,7 @@ async function handleButtonClick(button: ActiveButton, color: string): Promise<v
         }
         activeButton = button;
         if (button) {
+            fileListMessages = await provideFileContext();
             const counts = await queryFeedback(fileListMessages, color, button);
             updateAllStatusBars(counts.red, counts.yellow, counts.green);
         }

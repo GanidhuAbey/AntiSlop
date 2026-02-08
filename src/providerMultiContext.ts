@@ -22,7 +22,14 @@ function convertFileListToPrompt(fileDataList: string[][]) {
     return fileDataPrompt;
 }
 
-export async function provideFileContext(editor: vscode.TextEditor): Promise<string[]> {
+export async function provideFileContext(): Promise<string[]> {
+    const editor = vscode.window.activeTextEditor;
+        
+    if (!editor) {
+        vscode.window.showWarningMessage('No active open file found');
+        return [''];
+    }
+
 
     let [model] = await vscode.lm.selectChatModels({
         vendor: 'copilot',
