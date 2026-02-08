@@ -15,6 +15,7 @@ let redStatusBarItem: vscode.StatusBarItem;
 let yellowStatusBarItem: vscode.StatusBarItem;
 let greenStatusBarItem: vscode.StatusBarItem;
 
+
 // Track which button is currently active
 export type ActiveButton = 'red' | 'yellow' | 'green' | 'onLoad' | null;
 let activeButton: ActiveButton = null;
