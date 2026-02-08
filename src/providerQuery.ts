@@ -13,9 +13,10 @@ import {
 } from 'vscode';
 
 import type { ActiveButton } from './statusBar';
-import { getCodeInActiveFileWithLineNumbers, getVisibleCodeWithLineNumbers, parseChatResponse } from './utils';
+import { getCodeInActiveFileWithLineNumbers, getVisibleCodeWithLineNumbers, parseChatResponse, splitTextContent } from './utils';
 import { getProjectContext, hasProjectContext, projectContext } from './projectContext';
 
+import { ANNOTATION_PROMPT } from './prompts';
 
 export let activeFileMessages = [''];
 
@@ -48,7 +49,7 @@ export async function queryFeedback(fileListMessages: string[], color: string, a
 	const textEditor = vscode.window.activeTextEditor;
 
 	// console.log(`THIS IS THE CURRENT CONTEXT: ${projectContext}`);
-		
+
 	if (!textEditor) {
 		vscode.window.showWarningMessage('No active open file found');
 		return {red: 0, yellow: 0, green: 0};
@@ -65,37 +66,17 @@ export async function queryFeedback(fileListMessages: string[], color: string, a
     //console.log(model);
 
     // provide a pre-prompt for the LLM to guide it's responses
-    const projectContextInfo = hasProjectContext()  //TODO split getProjectContext into multiple if needed
-        ? `\n\nProject Requirements and Context:\n${getProjectContext()}\n\nPlease keep these project requirements in mind when evaluating the code.\n\n`
-        : '';
-
-    const ANNOTATION_PROMPT = `You are a code tutor who helps students learn how to write better code. Your job is to evaluate a block of code that the user gives you and then annotate any lines that could be improved with a brief suggestion and the reason why you are making that suggestion.${projectContextInfo}
-  
-   For each suggestion, assign a severity level:
-   - "red": Critical issues that impact security, incorrect behavior, data loss, edge cases, hidden bugs, undefined behavior or race conditions. Only red if it is one of these options.
-   - "yellow": Moderate issues that could be improved but aren't critical such as Efficiency, optimization, poor structure, duplication
-   - "green": Minor suggestions or style improvements such as bad variable names, inconsistent code stylings, very large one liners, naming, formatting, code clarity, minor best practices
-  
-   Be friendly with your suggestions and remember that these are students so they need gentle guidance. Format each suggestion as a single JSON object with a severity field. It is not necessary to wrap your response in triple backticks. Here is an example of what your response should look like:
-
-
-   { "line": 1, "severity": "red", "suggestion": "I think you should use a for loop instead of a while loop. A for loop is more concise and easier to read." }{ "line": 12, "severity": "yellow", "suggestion": "Consider adding a comment here to explain the logic." }
-
-
-To help you better understand the code, the user will first send a JSON object of files relevant to the one they are working on with the contents of the file. The JSON object will be in the structure:
-
-
-{ fileName1 : [“content of fileName1 as string“], fileName2 : [ “content of fileName2 as string”] }
-
-
-
-
-Afterwards, the user will provide a file they want to evaluate with line numbers.`;
+    const projectContextPrompt = '{ "projectRequirements" : "' + projectContext + '"}';
+    const projectContextMessages = splitTextContent(projectContextPrompt);
 
     // initialize the pre-prompt and user code as messages to the model
     let messages = [
         LanguageModelChatMessage.User(ANNOTATION_PROMPT)
     ];
+
+    projectContextMessages.forEach(item => {
+        messages.push(LanguageModelChatMessage.User(item));
+    })
 
     fileListMessages.forEach(item => {
         messages.push(LanguageModelChatMessage.User(item))
@@ -105,6 +86,7 @@ Afterwards, the user will provide a file they want to evaluate with line numbers
         messages.push(LanguageModelChatMessage.User(item));
     })
 
+    console.log(messages);
     //        LanguageModelChatMessage.User(code)
 
     if (model) {

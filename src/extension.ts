@@ -10,7 +10,7 @@ import { createChatParticipant, setAnnotationContext } from './chatParticipant';
 
 export function activate(context: vscode.ExtensionContext) {
 
-	console.log('Starting AntiSlop');
+	//console.log('Starting AntiSlop');
 
 	// Register code action provider for all file types
 	context.subscriptions.push(
