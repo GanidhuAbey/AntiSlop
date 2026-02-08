@@ -20,9 +20,8 @@ export function activate(context: vscode.ExtensionContext) {
 	// We can pass editor context as a parameter to the callback function (refer to textEditor)
 	const disposable = vscode.commands.registerTextEditorCommand('antislop.annotate', async (textEditor: vscode.TextEditor) => {
 		// The code you place here will be executed every time your command is executed
-		// await queryFeedback();
-		//let model = await provideFileContext(textEditor);
-		//await queryFeedback(model, textEditor);
+		//let fileListMessages = await provideFileContext(textEditor);
+		//await queryFeedback(fileListMessages, textEditor);
 	});
 
 	context.subscriptions.push(disposable);

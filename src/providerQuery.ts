@@ -13,7 +13,7 @@ import {
 } from 'vscode';
 
 import type { ActiveButton } from './statusBar';
-import { getVisibleCodeWithLineNumbers, parseChatResponse } from './utils';
+import { getCodeInActiveFileWithLineNumbers, getVisibleCodeWithLineNumbers, parseChatResponse } from './utils';
 
 
 // Store all decoration types so they can be cleared
@@ -38,9 +38,9 @@ export async function queryFeedback(color: string, activeSeverity: ActiveButton)
 		vscode.window.showWarningMessage('No active open file found');
 		return {red: 0, yellow: 0, green: 0};
 	}
-	
+
     // select model (TODO: should let user choose which agent they want.)
-    const code = getVisibleCodeWithLineNumbers(textEditor);	// TODO: Will need to change this to context of the whole page with split for token count
+    const code = getCodeInActiveFileWithLineNumbers(textEditor);	
     let [model] = await lm.selectChatModels({
     vendor: 'copilot',
     family: 'gpt-4o'
@@ -60,13 +60,30 @@ export async function queryFeedback(color: string, activeSeverity: ActiveButton)
     Be friendly with your suggestions and remember that these are students so they need gentle guidance. Format each suggestion as a single JSON object with a severity field. It is not necessary to wrap your response in triple backticks. Here is an example of what your response should look like:
 
     { "line": 1, "severity": "red", "suggestion": "I think you should use a for loop instead of a while loop. A for loop is more concise and easier to read." }{ "line": 12, "severity": "yellow", "suggestion": "Consider adding a comment here to explain the logic." }
-    `;
+
+   { "line": 1, "suggestion": "I think you should use a for loop instead of a while loop. A for loop is more concise and easier to read." }{ "line": 12, "suggestion": "I think you should use a for loop instead of a while loop. A for loop is more concise and easier to read." }
+
+
+To help you better understand the code, the user will first send a JSON object of file relevant to the one they are working on with the contents of the file. The JSON object will be in the structure:
+
+{ fileName1 : [“content of fileName1 as string“], fileName2 : [ “content of fileName2 as string”] }
+
+
+Afterwards, the user will provide a file they want to evaluate with line numbers.`;
 
     // initialize the pre-prompt and user code as messages to the model
-    const messages = [
-        LanguageModelChatMessage.User(ANNOTATION_PROMPT),
-        LanguageModelChatMessage.User(code)
+    let messages = [
+        LanguageModelChatMessage.User(ANNOTATION_PROMPT)
     ];
+    fileListMessages.forEach(item => {
+        messages.push(LanguageModelChatMessage.User(item))
+    })
+
+    code.forEach(item => {
+        messages.push(LanguageModelChatMessage.User(item));
+    })
+
+    //        LanguageModelChatMessage.User(code)
 
     if (model) {
         //console.log("sending message to model.");

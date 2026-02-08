@@ -22,7 +22,7 @@ function convertFileListToPrompt(fileDataList: string[][]) {
     return fileDataPrompt;
 }
 
-export async function provideFileContext(editor: vscode.TextEditor): Promise<vscode.LanguageModelChat> {
+export async function provideFileContext(editor: vscode.TextEditor): Promise<string[]> {
     let [model] = await vscode.lm.selectChatModels({
         vendor: 'copilot',
         family: 'gpt-4o'
@@ -88,7 +88,7 @@ export async function provideFileContext(editor: vscode.TextEditor): Promise<vsc
 
     //console.log(data);
 
-    let fileListMessages = '';
+    let fileListMessages: string[] = [];
 
     if (model) {
         //console.log("sending message to model.");
@@ -115,7 +115,7 @@ export async function provideFileContext(editor: vscode.TextEditor): Promise<vsc
         let fileDataList = await getCodeInFiles(editor, files);
         let fileListPrompt = convertFileListToPrompt(fileDataList);
         
-        let fileListMessages = splitTextContent(fileListPrompt);
+        fileListMessages = splitTextContent(fileListPrompt);
 
         //let fileListContext = [vscode.LanguageModelChatMessage.User(FILE_LIST_PROMPT)];
         // fileListMessages.forEach(item => {
@@ -123,7 +123,7 @@ export async function provideFileContext(editor: vscode.TextEditor): Promise<vsc
         // });
     }
 
-    return model;
+    return fileListMessages;
 }
 
 async function test(chatResponse: vscode.LanguageModelChatResponse, textEditor: vscode.TextEditor) {
