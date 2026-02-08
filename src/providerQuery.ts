@@ -31,7 +31,7 @@ export function clearDecorations() {
 	activeDecorations = [];
 }
 // Query the LLM on the currently visible section of code
-export async function queryFeedback(color: string, activeSeverity: ActiveButton): Promise<{red: number, yellow: number, green: number}> {
+export async function queryFeedback(fileListMessages: string[], color: string, activeSeverity: ActiveButton): Promise<{red: number, yellow: number, green: number}> {
 	const textEditor = vscode.window.activeTextEditor;
 		
 	if (!textEditor) {
@@ -50,23 +50,25 @@ export async function queryFeedback(color: string, activeSeverity: ActiveButton)
     //console.log(model);
 
     // provide a pre-prompt for the LLM to guide it's responses
-    const ANNOTATION_PROMPT = `You are a code tutor who helps students learn how to write better code. Your job is to evaluate a block of code that the user gives you and then annotate any lines that could be improved with a brief suggestion and the reason why you are making that suggestion. 
-    
-    For each suggestion, assign a severity level:
-    - "red": Critical issues that impact security, incorrect behavior, data loss, edge cases, hidden bugs, undefined behavior or race conditions. Only red if it is one of these options.
-    - "yellow": Moderate issues that could be improved but aren't critical such as Efficiency, optimization, poor structure, duplication
-    - "green": Minor suggestions or style improvements such as bad variable names, inconsistent code stylings, very large one liners, naming, formatting, code clarity, minor best practices
-    
-    Be friendly with your suggestions and remember that these are students so they need gentle guidance. Format each suggestion as a single JSON object with a severity field. It is not necessary to wrap your response in triple backticks. Here is an example of what your response should look like:
-
-    { "line": 1, "severity": "red", "suggestion": "I think you should use a for loop instead of a while loop. A for loop is more concise and easier to read." }{ "line": 12, "severity": "yellow", "suggestion": "Consider adding a comment here to explain the logic." }
-
-   { "line": 1, "suggestion": "I think you should use a for loop instead of a while loop. A for loop is more concise and easier to read." }{ "line": 12, "suggestion": "I think you should use a for loop instead of a while loop. A for loop is more concise and easier to read." }
+    const ANNOTATION_PROMPT = `You are a code tutor who helps students learn how to write better code. Your job is to evaluate a block of code that the user gives you and then annotate any lines that could be improved with a brief suggestion and the reason why you are making that suggestion.
+  
+   For each suggestion, assign a severity level:
+   - "red": Critical issues that impact security, incorrect behavior, data loss, edge cases, hidden bugs, undefined behavior or race conditions. Only red if it is one of these options.
+   - "yellow": Moderate issues that could be improved but aren't critical such as Efficiency, optimization, poor structure, duplication
+   - "green": Minor suggestions or style improvements such as bad variable names, inconsistent code stylings, very large one liners, naming, formatting, code clarity, minor best practices
+  
+   Be friendly with your suggestions and remember that these are students so they need gentle guidance. Format each suggestion as a single JSON object with a severity field. It is not necessary to wrap your response in triple backticks. Here is an example of what your response should look like:
 
 
-To help you better understand the code, the user will first send a JSON object of file relevant to the one they are working on with the contents of the file. The JSON object will be in the structure:
+   { "line": 1, "severity": "red", "suggestion": "I think you should use a for loop instead of a while loop. A for loop is more concise and easier to read." }{ "line": 12, "severity": "yellow", "suggestion": "Consider adding a comment here to explain the logic." }
+
+
+To help you better understand the code, the user will first send a JSON object of files relevant to the one they are working on with the contents of the file. The JSON object will be in the structure:
+
 
 { fileName1 : [“content of fileName1 as string“], fileName2 : [ “content of fileName2 as string”] }
+
+
 
 
 Afterwards, the user will provide a file they want to evaluate with line numbers.`;
@@ -75,6 +77,7 @@ Afterwards, the user will provide a file they want to evaluate with line numbers
     let messages = [
         LanguageModelChatMessage.User(ANNOTATION_PROMPT)
     ];
+
     fileListMessages.forEach(item => {
         messages.push(LanguageModelChatMessage.User(item))
     })
@@ -121,6 +124,8 @@ function categorizeResponses(responses: any[], textEditor: TextEditor, color: st
             applyDecoration(textEditor, annotation.line, annotation.suggestion, color);
         }
     })
+
+    return counts;
 }
 
 function applyDecoration(textEditor: TextEditor, line: number, suggestion: string, color: string) {

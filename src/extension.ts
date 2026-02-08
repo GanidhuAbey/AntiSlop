@@ -15,12 +15,12 @@ export function activate(context: vscode.ExtensionContext) {
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "antislop" is now active!');
+	//let fileListMessages = '';
 
 	// This command holds the funcationality for when user activate the command
 	// We can pass editor context as a parameter to the callback function (refer to textEditor)
 	const disposable = vscode.commands.registerTextEditorCommand('antislop.annotate', async (textEditor: vscode.TextEditor) => {
 		// The code you place here will be executed every time your command is executed
-		//let fileListMessages = await provideFileContext(textEditor);
 		//await queryFeedback(fileListMessages, textEditor);
 	});
 

@@ -23,6 +23,7 @@ function convertFileListToPrompt(fileDataList: string[][]) {
 }
 
 export async function provideFileContext(editor: vscode.TextEditor): Promise<string[]> {
+
     let [model] = await vscode.lm.selectChatModels({
         vendor: 'copilot',
         family: 'gpt-4o'
