@@ -21,11 +21,11 @@ export class ContextPanel {
                 switch (message.type) {
                     case 'saveContext':
                         setProjectContext(message.context);
-                        console.log("CONTEXT SAVED");
+                        //console.log("CONTEXT SAVED");
                         vscode.window.showInformationMessage('Project requirements saved!');
                         return;
                     case 'loadContext':
-                        console.log("CONTEXT LOADED");
+                        //console.log("CONTEXT LOADED");
                         this._panel.webview.postMessage({
                             type: 'contextLoaded',
                             context: getProjectContext()

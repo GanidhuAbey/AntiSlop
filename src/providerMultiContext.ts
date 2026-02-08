@@ -5,6 +5,7 @@ import * as fs from 'fs';
 
 import { getCodeInActiveFileWithLineNumbers, parseChatResponse, getCodeInFiles, splitTextContent } from './utils';
 
+import { FILE_QUERY_PROMPT } from './prompts';
 
 // The file list should have the file name as the first element in the list.
 function convertFileListToPrompt(fileDataList: string[][]) {
@@ -41,10 +42,7 @@ export async function provideFileContext(): Promise<string[]> {
     //console.log(code);
 
     // create prompt
-    const FILE_QUERY_PROMPT = `You are a code tutor who helps students learn how to write better code. Your first job is to evaluate a file that the user gives you and then determine all the relevant files you need to better understand the code given, the provided code may be split into chunks, consider all of the messages following this to be referring to the file the user gave you until you see the message “END OF CODE”. Afterwards a list of files will be sent, please select additional files from this list that you believe is necessary to understand the file the user has given you. Try to minimize the number of files that you need and only select files from the list of file paths provided. Format the required files as a single JSON object save the file using the exact path given in the message. It is not necessary to wrap your response in triple backticks. It is okay to send an empty array if none of the paths are absolutely necessary. Here is an example of what your response should look like:
 
-
-   { paths: [“src/extension.ts”, "src/provideAuthority.ts”, “file_transfer.ts”] }`;
 
 //     const FILE_PROCESS_PROMPT = `Based on your previous responses, here are the requested files formatted into a JSON object of the following structure:
 
@@ -90,7 +88,7 @@ export async function provideFileContext(): Promise<string[]> {
         }
     });
 
-    console.log(fileNamesPrompt);
+    //console.log(fileNamesPrompt);
 
     messages.push(vscode.LanguageModelChatMessage.User(fileNamesPrompt));    
 
@@ -113,12 +111,12 @@ export async function provideFileContext(): Promise<string[]> {
         //     applyDecoration(textEditor, annotation.line, annotation.suggestion);
         // })
 
-        console.log(response);
+        //console.log(response);
 
         // parse responses
         let files = response[0].paths; // should only be one response.
 
-        console.log(files);
+        //console.log(files);
 
         let fileDataList = await getCodeInFiles(editor, files);
         let fileListPrompt = convertFileListToPrompt(fileDataList);
